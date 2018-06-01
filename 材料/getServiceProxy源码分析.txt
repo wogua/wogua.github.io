@@ -1,0 +1,152 @@
+以musicplayer模块为例，前台page获取后台服务代码如下
+page.getServiceProxy("page://musicplayer.yunos.com/musicservice", this._connection.connection, true);
+
+这段代码类似于Android中的Activity.bindServer();目的都是在回调中获取远程服务的代理。
+
+Seed 与 pagemanagerd通讯直接用的本地socket
+本地socket通讯实际上是客户端向设备文件写数据，服务端监听设备文件的数据，对应的两个文件为Seed.cpp和SocketMessageCenter.cpp
+framework\nativeservice\seed\src\Seed.cpp
+const String kDPMSSocket("/dev/socket/dpms");
+framework\nativeservice\pagemgrd\dpms\src\ipc\SocketMessageCenter.cpp
+static const String kSeedSocketName("/dev/socket/seed");
+static const String kDPMSSocketName("/dev/socket/dpms");
+
+Seed.cpp中用SockClient发消息给pagemanagerd的设备节点
+bool Seed::sendMessageToDPMS(const String& msg) {
+mDPMSSockClient = YUNOS_NEW(SockClient, kDPMSSocket);
+mDPMSSockClient->sendMessage(msg);
+}
+
+接收端为SocketMessageCenter.cpp，SocketMessageCenter初始化在DynamicPageManagerService
+framework\nativeservice\pagemgrd\dpms\src\DynamicPageManagerService.cpp
+void DynamicPageManagerService::initializeSeedClient() {
+mSocketMessageCenter = dpmsFTY->getSocketMessageCenter();
+mSocketMessageCenter->start();
+}
+SocketMessageCenter在start()开启一个线程ServerThread，线程中用SockServer监听设备文件
+mServer = YUNOS_NEW(SockServer, kDPMSSocketName);
+mServer->listen(mListener);
+
+mListener为Listener的实例
+class Listener : public SockListener {
+virtual void onReceived(const String& inMessage, String& outMessage) {
+
+mCenter->handleMessage(inMessage);
+
+}
+}
+
+所以当Listener监听到休息后会回调SocketMessageCenter.cpp的handleMessage(inMessage)函数。
+void SocketMessageCenter::handleMessage(const String& inMessage) {
+    if (mMainLooper) {
+        mMainLooper->sendTask(Task(handleMessageCB, this, inMessage));
+    }
+}
+
+
+接着用mMainLooper发送一个任务，最好通过looper回调handleMessageCB。
+void SocketMessageCenter::handleMessageCB(SocketMessageCenter* self, String inMessage) {
+    assert(self);
+    self->handleMessageInner(inMessage);
+}
+
+接着调用到handleMessageInner
+void SocketMessageCenter::handleMessageInner(const String& inMessage) {
+if (inMessage.endsWith("seed start")) {
+
+}
+}
+
+pagemanagerd也会给seed发消息，比如"homeshell ready"，DynamicPageManagerService.cpp
+void DynamicPageManagerService::updatePageStatus(const String& pageId,
+        const String& status, int32_t uid) {
+……
+sendRawMessageToSeed(String("homeshell ready"), seeds[i]);
+……
+}
+
+bool DynamicPageManagerService::sendRawMessageToSeed(const String& message, const String& seed) {
+    if (!mSocketMessageCenter) {
+        LOG_E("%s: mSocketMessageCenter is nullptr", __FUNCTION__);
+        return false;
+    }
+    return mSocketMessageCenter->sendRawMessageToSeed(message, seed);
+}
+
+这里调到SocketMessageCenter.cpp中的sendRawMessageToSeed
+bool SocketMessageCenter::sendRawMessageToSeed(const String& message, const String& seed) {
+    SeedSocketClient* client = getSocketClient(seed);
+    if (!client->mIsSeedReady) {
+        client->mPendingMessageList.push_back(message);
+        return true;
+    }
+
+    return sendRawMessageToSeedInner(message, client);
+}
+
+这里的client初始化在getSocketClient中
+SeedSocketClient* client = mSeedClients[seed];
+如果缓存没有则创建一个，socketName
+String socketName = kSeedSocketName;//kSeedSocketName = "/dev/socket/seed"
+client = YUNOS_NEW(SeedSocketClient, socketName);
+
+最后，消息会通过client发送给Seed.cpp中的SockListener，最后回调Seed.cpp中的handleMessage
+void Seed::handleMessage(const String& msg) {
+……
+if (msg.find("pagemanagerd start") == 0){
+}
+……
+else{//else里面即处理进程fork和kill
+if (info->action() == "fork") {
+            forkDomainProcess(info);
+        } else if (info->action() == "kill") {
+            killDomainProcess(info);
+        }
+……
+}
+}
+
+
+
+
+page的创建
+framework\nativeservice\pagemgrd\dpms\src\model\TaskRecord.cpp
+loadPage
+PageRecord* pageRecord = dpmsFTY->createPageRecord(pageInfo, link, msg, this);
+
+framework\nativeservice\pagemgrd\dpms\src\DPMSFactoryImpl.cpp
+createPageRecord
+PageRecord* page = YUNOS_NEW(PageRecord, pageInfo, link, msg, task);
+
+PageRecord
+
+PageRecord init
+mProcess = dpmsFTY->getProcessManager()->allocateProcess(
+            this, link->getOption().isInGroup());
+
+framework\nativeservice\pagemgrd\dpms\src\manager\ProcessManager.cpp
+ProcessManager createProcess
+
+Process* ProcessManager::allocateProcess(PageRecord* page, bool inGroup) {
+process = createProcess(page->getPageUri(), title, pageInfo->getDomain(), taskId,
+            page->getSeed());
+
+process->attachPageRecord(page);
+}
+
+framework\nativeservice\pagemgrd\dpms\src\model\Process.cpp
+void Process::attachPageRecord(PageRecord* page) 
+
+next
+void Process::startProcessViaSeed(PageRecord* page) {//准备page的数据
+if (!dpmsMAIN->sendRawMessageToSeed(msg, mSeed)) {
+        LOG_E("Commnucation with seed error!!!");
+    }
+}
+
+后面得流程前面讲seed和pagemanagerd通信讲了，不累述。
+DynamicPageManagerService.cpp
+sendRawMessageToSeed
+
+
+
