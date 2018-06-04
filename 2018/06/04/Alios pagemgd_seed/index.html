@@ -7,19 +7,19 @@
   
   <title>Alios pagemanagerd与seed通信 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
+  <meta name="description" content="pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Page，一">
 <meta name="keywords" content="Alios源码分析,pagemanagerd,seed">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Alios pagemanagerd与seed通信">
 <meta property="og:url" content="http://yoursite.com/2018/06/04/Alios pagemgd_seed/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
+<meta property="og:description" content="pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Page，一">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg">
-<meta property="og:updated_time" content="2018-06-04T18:10:59.178Z">
+<meta property="og:updated_time" content="2018-06-04T18:14:17.113Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Alios pagemanagerd与seed通信">
-<meta name="twitter:description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
+<meta name="twitter:description" content="pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Page，一">
 <meta name="twitter:image" content="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -93,7 +93,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>###pagemanagerd和seed简介<br>Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed  </p>
+        <h3 id="pagemanagerd和seed简介"><a href="#pagemanagerd和seed简介" class="headerlink" title="pagemanagerd和seed简介"></a>pagemanagerd和seed简介</h3><p>Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed  </p>
 <ul>
 <li>pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)  </li>
 <li>seed则为所有page的孵化进程<br>这两个进程一个用于<strong>管理Page</strong>，一个用于<strong>创建销毁Page</strong>，两者必然需要频繁通信，因此了解二者的通信实现方可知道Page的创建流程。</li>
