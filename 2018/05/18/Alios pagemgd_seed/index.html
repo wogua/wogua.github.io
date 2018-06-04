@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Alios PageIPC getRunningPages源码分析 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Alios有两个非常重要的native进程：pagemanagerd和seedpagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)seed则为所有page的孵化进程(类似于Android的zygote)这两个进程一个用于管理Page，一个用于创建Page，两者必然需要频繁通信，因此了解二者的通信实现方可知道Page">
+<meta name="keywords" content="Alios,PageIPC,getRunningPages">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Alios PageIPC getRunningPages源码分析">
+<meta property="og:url" content="http://yoursite.com/2018/05/18/Alios pagemgd_seed/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Alios有两个非常重要的native进程：pagemanagerd和seedpagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)seed则为所有page的孵化进程(类似于Android的zygote)这两个进程一个用于管理Page，一个用于创建Page，两者必然需要频繁通信，因此了解二者的通信实现方可知道Page">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg">
+<meta property="og:updated_time" content="2018-06-04T13:20:16.604Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Alios PageIPC getRunningPages源码分析">
+<meta name="twitter:description" content="Alios有两个非常重要的native进程：pagemanagerd和seedpagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)seed则为所有page的孵化进程(类似于Android的zygote)这两个进程一个用于管理Page，一个用于创建Page，两者必然需要频繁通信，因此了解二者的通信实现方可知道Page">
+<meta name="twitter:image" content="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Alios pagemgd_seed" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/18/Alios pagemgd_seed/" class="article-date">
+  <time datetime="2018-05-17T16:00:00.000Z" itemprop="datePublished">2018-05-18</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Javascript学习/">Javascript学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Alios PageIPC getRunningPages源码分析
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Alios有两个非常重要的native进程：pagemanagerd和seed<br>pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)<br>seed则为所有page的孵化进程(类似于Android的zygote)<br>这两个进程一个用于管理Page，一个用于创建Page，两者必然需要频繁通信，因此了解二者的通信实现方可知道Page的创建流程。<br>二者皆在开机时启动，开机流程：BootLoader-&gt;kernel-&gt;systemd-&gt;native services-&gt;runtime-&gt;Key apps<br>pagemanagerd和seed为native services，二者相互联系且依赖，下面我们来看看二者如何通信的。</p>
+<p>首先要明确，pagemanagerd和seed IPC通信是直接用socket实现的，要知道alios进程通信主要采用的是ubus，即封装好的socket通信。<br>至于为什么直接用socket，原因必然是socket更合适，更高效。ubus kernel层调用的是kdbus，kdbus是可以传输大块数据的，中间应该用了共享缓存机制，pagemanagerd和seed<br>的通信仅为少量消息的传递，且需要相对较高的实时性，所以直接采取socket方式。<br>这里的socket通信不同于网络socket，本地socket实际上是client端读写设备文件，services端监听设备文件从而达到消息传递。</p>
+<p>pagemanagerd和seed对应的设备文件如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">static const String kSeedSocketName(&quot;/dev/socket/seed&quot;);//实际的设备文件名需要根据systemd去确定</span><br><span class="line">static const String kDPMSSocketName(&quot;/dev/socket/dpms&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>pagemanagerd和seed关键代码<br>framework\nativeservice\seed\src\Seed.cpp<br>framework\nativeservice\pagemgrd\dpms\src\ipc\SocketMessageCenter.cpp<br>framework\nativeservice\pagemgrd\dpms\src\DynamicPageManagerService.cpp</p>
+<p>###seed发送消息给pagemanagerd<br>framework\nativeservice\seed\src\Seed.cpp</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">bool Seed::sendMessageToDPMS(const String&amp; msg) &#123;</span><br><span class="line">    LOG_D(&quot;sendMessageToDPMS: %s&quot;, msg.c_str());</span><br><span class="line">    if (!mDPMSSockClient) &#123;</span><br><span class="line">        mDPMSSockClient = YUNOS_NEW(SockClient, kDPMSSocket);//kDPMSSocket == &quot;/dev/socket/dpms&quot;</span><br><span class="line">        if (!mDPMSSockClient) &#123;</span><br><span class="line">            YUNOS_HANDLE_OOM();</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return mDPMSSockClient-&gt;sendMessage(msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Seed中用SockClient发消息给pagemanagerd的设备节点<code>/dev/socket/dpms</code></p>
+<p>###seed监听来至pagemanagerd的消息<br>实现socket监听即实现Socklisener，然后用SockServer绑定对应设备文件，并监听该Socklisener，当设备文件有新写入时socket机制会回调Socklisener的onReceived函数去做具体的消息处理。<br>Socklisener实现如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">class Listener : public SockListener &#123;</span><br><span class="line">public:</span><br><span class="line">    explicit Listener(Seed* seed) : mSeed(seed) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    virtual ~Listener() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    virtual void onReceived(const String&amp; inMessage, String&amp; outMessage) &#123;</span><br><span class="line">        if (mSeed) &#123;</span><br><span class="line">            mSeed-&gt;handleMessage(inMessage);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    Seed* mSeed;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>SockServer的实例化和绑定在Seed.cpp的run函数中，如下是代码片段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int socketFd = ProcessUtil::retrieveSeedSocketFd();//获取&quot;/dev/socket/seed_xxx&quot;设备节点</span><br><span class="line">……</span><br><span class="line">mSeedSockServer = YUNOS_NEW(SockServer, socketFd);//初始化SockServer并绑定设备节点</span><br><span class="line">mListener = YUNOS_NEW(Listener, this);//初始化Listener并传递Seed本身作为回调句柄</span><br><span class="line">……</span><br><span class="line">mSeedSockServer-&gt;setMainLoop(env-&gt;event_loop());//用loop机制去轮询消息</span><br><span class="line">ret = mSeedSockServer-&gt;listen(mListener);//开始监听</span><br></pre></td></tr></table></figure>
+<p>当pagemanagerd向seed设备节点发消息后，Listener的onReceived会被调用，然后回调Seed.cpp的handleMessage函数，handleMessage中<br>有3个消息，<code>&quot;pagemanagerd start&quot;</code>,<code>&quot;homeshell ready&quot;</code>,page的创建销毁，详细如下代码片段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">void Seed::handleMessage(const String&amp; msg) &#123;</span><br><span class="line">	……</span><br><span class="line">	if (msg.find(&quot;pagemanagerd start&quot;) == 0) &#123;//pagemanagerd启动后通知seed</span><br><span class="line">		……</span><br><span class="line">		sendMessageToDPMS(String(&quot;seed ready&quot;));//发消息告诉pagemanagerd seed已经准备好了</span><br><span class="line">		……</span><br><span class="line">	&#125; else if (msg.find(&quot;homeshell ready&quot;) == 0) &#123;</span><br><span class="line">        invokeHomeshellReadyCB();</span><br><span class="line">    &#125; else &#123;//其他消息则为进程的创建和销毁消息</span><br><span class="line">		SharedPtr&lt;ProcessInfo&gt; info = YUNOS_NEW(ProcessInfo);</span><br><span class="line">        if (!info.pointer()) &#123;</span><br><span class="line">            YUNOS_ABORT_OOM();</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        if (!info-&gt;parseJson(msg)) &#123;//解析msg中的信息到ProcessInfo</span><br><span class="line">            LOG_E(&quot;Seed Socket Failed to parse domain infomation from json string&quot;);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        if (info-&gt;action() == &quot;fork&quot;) &#123;</span><br><span class="line">            forkDomainProcess(info);//创建进程</span><br><span class="line">        &#125; else if (info-&gt;action() == &quot;kill&quot;) &#123;</span><br><span class="line">            killDomainProcess(info);//销毁进程</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>###pagemanagerd监听seed的消息<br>来着seed的第一个消息为seed初始化的时候，在Seed.cpp的run函数中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bool ret = sendMessageToDPMS(String(&quot;seed start&quot;));</span><br></pre></td></tr></table></figure>
+<p>pagemanagerd中socket监听同样也是实现SockListener，用SockServer绑定设备节点并监听，具体实现代码<br>framework\nativeservice\pagemgrd\dpms\src\ipc\SocketMessageCenter.cpp</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class Listener : public SockListener &#123;</span><br><span class="line">public:</span><br><span class="line">    explicit Listener(SocketMessageCenter* center) : mCenter(center) &#123;</span><br><span class="line">        assert(mCenter);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    virtual ~Listener() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    virtual void onReceived(const String&amp; inMessage, String&amp; outMessage) &#123;</span><br><span class="line">        if (mCenter) &#123;</span><br><span class="line">            mCenter-&gt;handleMessage(inMessage);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    SocketMessageCenter* mCenter;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>SocketMessageCenterzhong SockServer绑定和监听放在线程ServerThread中，直接看其run()函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">virtual int run() &#123;</span><br><span class="line">	……</span><br><span class="line">	mServer = YUNOS_NEW(SockServer, kDPMSSocketName);//kDPMSSocketName == &quot;/dev/socket/dpms&quot;</span><br><span class="line">    if (!mServer) &#123;</span><br><span class="line">        YUNOS_ABORT_OOM();</span><br><span class="line">    &#125;</span><br><span class="line">    mServer-&gt;listen(mListener);//mListener是Listener实例</span><br></pre></td></tr></table></figure>
+<p>当seed发送的seed start消息到来时，首先调用Listener的onReceived,然后回调给SocketMessageCenter的handleMessage函数：<code>mCenter-&gt;handleMessage(inMessage)</code>,<br>handleMessage通过loop发消息回调，最后调用handleMessageCB，而handleMessageCB又调用handleMessageInner</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">virtual void onReceived(const String&amp; inMessage, String&amp; outMessage) &#123;</span><br><span class="line">       if (mCenter) &#123;</span><br><span class="line">           mCenter-&gt;handleMessage(inMessage);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">……</span><br><span class="line">void SocketMessageCenter::handleMessage(const String&amp; inMessage) &#123;</span><br><span class="line">   if (mMainLooper) &#123;</span><br><span class="line">       mMainLooper-&gt;sendTask(Task(handleMessageCB, this, inMessage));</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">void SocketMessageCenter::handleMessageCB(SocketMessageCenter* self, String inMessage) &#123;</span><br><span class="line">	assert(self);</span><br><span class="line">	self-&gt;handleMessageInner(inMessage);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>故最终我们我们只需要关注SocketMessageCenter的handleMessageInner函数即可<br>void SocketMessageCenter::handleMessageInner(const String&amp; inMessage) {<br>    if (inMessage.endsWith(“seed start”)) {<br>        ……<br>        notifySeedOnStart(client);//发送pagemanagerd start消息给seed<br>        ……<br>    }<br>    if (inMessage.endsWith(“seed ready”)) {</p>
+<pre><code>}
+……
+</code></pre><p>}</p>
+<p>###pagemanagerd向seed发送消息,发送消息的调用通常如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void DynamicPageManagerService::updatePageStatus(const String&amp; pageId,</span><br><span class="line">        const String&amp; status, int32_t uid) &#123;</span><br><span class="line">	……</span><br><span class="line">	sendRawMessageToSeed(String(&quot;homeshell ready&quot;), seeds[i]);</span><br><span class="line">	……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>sendRawMessageToSeed的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">	bool DynamicPageManagerService::sendRawMessageToSeed(const String&amp; message, const String&amp; seed) &#123;</span><br><span class="line">    if (!mSocketMessageCenter) &#123;</span><br><span class="line">        LOG_E(&quot;%s: mSocketMessageCenter is nullptr&quot;, __FUNCTION__);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">    return mSocketMessageCenter-&gt;sendRawMessageToSeed(message, seed);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DynamicPageManagerService发消息给seed还是调到SocketMessageCenter的sendRawMessageToSeed，具体调用栈如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">bool SocketMessageCenter::sendRawMessageToSeed(const String&amp; message, const String&amp; seed) &#123;</span><br><span class="line">    SeedSocketClient* client = getSocketClient(seed);</span><br><span class="line">    if (!client-&gt;mIsSeedReady) &#123;</span><br><span class="line">        client-&gt;mPendingMessageList.push_back(message);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return sendRawMessageToSeedInner(message, client);</span><br><span class="line">&#125;</span><br><span class="line">……</span><br><span class="line"></span><br><span class="line">bool SocketMessageCenter::sendRawMessageToSeedInner(const String&amp; message,</span><br><span class="line">        SeedSocketClient* client) &#123;</span><br><span class="line">    LOG_D(&quot;Sending message to seed: %s&quot;, message.c_str());</span><br><span class="line">    return client-&gt;mSeedClient.sendMessage(message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过上面代码分析，seed和pagemanagerd通信基本打通，二者互为socket client和socket service。二者启动后会建立socket连接，从而相互通信。</p>
+<p><img src="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg" alt=""></p>
+<p>###page的创建</p>
+<p>一个page的创建通常是通过page.sendLink开始API调用流程一笔带过<br>framework\npm\caf2\src\page\Page.js : sendLink<br>framework\npm\pageapi\PageImpl.js : sendLink<br>framework\npm\pageapi\PageInstance.js : sendLink<br>framework\libs\page\manager\src\ipc\DPMS.cpp : sendLink<br>IPC -&gt;<br>framework\nativeservice\pagemgrd\dpms\src\DynamicPageManagerService.cpp : requestPageLink</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/18/Alios pagemgd_seed/" data-id="cji0aetlc0005ogui4lgtlcxu" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Alios/">Alios</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PageIPC/">PageIPC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/getRunningPages/">getRunningPages</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/05/22/Alios Settings/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Alios Settings模块学习
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/05/18/Alios PageIPC/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Alios PageIPC getRunningPages源码分析</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Javascript学习/">Javascript学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/YunOS学习/">YunOS学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alios/">Alios</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alistudio/">Alistudio</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Javascript/">Javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PageIPC/">PageIPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Settings/">Settings</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SettingsProvider/">SettingsProvider</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YunOS/">YunOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/getRunningPages/">getRunningPages</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/基础/">基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/特性/">特性</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Alios/" style="font-size: 15px;">Alios</a> <a href="/tags/Alistudio/" style="font-size: 10px;">Alistudio</a> <a href="/tags/Javascript/" style="font-size: 10px;">Javascript</a> <a href="/tags/PageIPC/" style="font-size: 15px;">PageIPC</a> <a href="/tags/Settings/" style="font-size: 15px;">Settings</a> <a href="/tags/SettingsProvider/" style="font-size: 10px;">SettingsProvider</a> <a href="/tags/YunOS/" style="font-size: 20px;">YunOS</a> <a href="/tags/getRunningPages/" style="font-size: 15px;">getRunningPages</a> <a href="/tags/基础/" style="font-size: 10px;">基础</a> <a href="/tags/特性/" style="font-size: 10px;">特性</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/05/22/Alios Settings/">Alios Settings模块学习</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/18/Alios pagemgd_seed/">Alios PageIPC getRunningPages源码分析</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/18/Alios PageIPC/">Alios PageIPC getRunningPages源码分析</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/18/Javascript first getting/">Javascript基础认知</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/10/Alios SettingsProvider/">Alios SettingsProvider模块学习</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
