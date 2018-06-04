@@ -8,15 +8,15 @@
   <title>Alios pagemanagerd与seed通信 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
-<meta name="keywords" content="Alios,PageIPC,getRunningPages">
+<meta name="keywords" content="Alios源码分析,pagemanagerd,seed">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Alios pagemanagerd与seed通信">
-<meta property="og:url" content="http://yoursite.com/2018/05/18/Alios pagemgd_seed/index.html">
+<meta property="og:url" content="http://yoursite.com/2018/06/04/Alios pagemgd_seed/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://p9jmdxlv0.bkt.clouddn.com/dpmsseed1.jpg">
-<meta property="og:updated_time" content="2018-06-04T18:08:57.966Z">
+<meta property="og:updated_time" content="2018-06-04T18:10:59.178Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Alios pagemanagerd与seed通信">
 <meta name="twitter:description" content="###pagemanagerd和seed简介Page是Alios的最核心元素，是Alios界面元素的管理单元，而与之对应的有两个非常重要的native进程pagemanagerd和seed    pagemanagerd管理系统的domain和page，这其中包含大家熟知的DPMS和SPMS(类似于Android的AMS和PMS)   seed则为所有page的孵化进程这两个进程一个用于管理Pag">
@@ -69,12 +69,12 @@
       <div class="outer">
         <section id="main"><article id="post-Alios pagemgd_seed" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2018/05/18/Alios pagemgd_seed/" class="article-date">
-  <time datetime="2018-05-17T16:00:00.000Z" itemprop="datePublished">2018-05-18</time>
+    <a href="/2018/06/04/Alios pagemgd_seed/" class="article-date">
+  <time datetime="2018-06-03T16:00:00.000Z" itemprop="datePublished">2018-06-04</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Javascript学习/">Javascript学习</a>
+    <a class="article-category-link" href="/categories/Alios-源码分析/">Alios 源码分析</a>
   </div>
 
   </div>
@@ -159,10 +159,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/18/Alios pagemgd_seed/" data-id="cji0kl02f00012wui10u7p13p" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/06/04/Alios pagemgd_seed/" data-id="cji0kl02f00012wui10u7p13p" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Alios/">Alios</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PageIPC/">PageIPC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/getRunningPages/">getRunningPages</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Alios源码分析/">Alios源码分析</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pagemanagerd/">pagemanagerd</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/seed/">seed</a></li></ul>
 
     </footer>
   </div>
@@ -170,19 +170,10 @@
     
 <nav id="article-nav">
   
-    <a href="/2018/05/18/Alios PageIPC/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          Alios PageIPC getRunningPages源码分析
-        
-      </div>
-    </a>
   
-  
-    <a href="/2018/05/18/Javascript first getting/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2018/05/22/Alios Settings/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">Javascript基础认知</div>
+      <div class="article-nav-title">Alios Settings模块学习</div>
     </a>
   
 </nav>
@@ -198,7 +189,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Javascript学习/">Javascript学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/YunOS学习/">YunOS学习</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Alios-源码分析/">Alios 源码分析</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Javascript学习/">Javascript学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/YunOS学习/">YunOS学习</a></li></ul>
     </div>
   </div>
 
@@ -208,7 +199,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alios/">Alios</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alistudio/">Alistudio</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Javascript/">Javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PageIPC/">PageIPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Settings/">Settings</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SettingsProvider/">SettingsProvider</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YunOS/">YunOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/getRunningPages/">getRunningPages</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/基础/">基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/特性/">特性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alios/">Alios</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alios源码分析/">Alios源码分析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Alistudio/">Alistudio</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Javascript/">Javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PageIPC/">PageIPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Settings/">Settings</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SettingsProvider/">SettingsProvider</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YunOS/">YunOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/getRunningPages/">getRunningPages</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pagemanagerd/">pagemanagerd</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/seed/">seed</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/基础/">基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/特性/">特性</a></li></ul>
     </div>
   </div>
 
@@ -218,7 +209,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Alios/" style="font-size: 15px;">Alios</a> <a href="/tags/Alistudio/" style="font-size: 10px;">Alistudio</a> <a href="/tags/Javascript/" style="font-size: 10px;">Javascript</a> <a href="/tags/PageIPC/" style="font-size: 15px;">PageIPC</a> <a href="/tags/Settings/" style="font-size: 15px;">Settings</a> <a href="/tags/SettingsProvider/" style="font-size: 10px;">SettingsProvider</a> <a href="/tags/YunOS/" style="font-size: 20px;">YunOS</a> <a href="/tags/getRunningPages/" style="font-size: 15px;">getRunningPages</a> <a href="/tags/基础/" style="font-size: 10px;">基础</a> <a href="/tags/特性/" style="font-size: 10px;">特性</a>
+      <a href="/tags/Alios/" style="font-size: 10px;">Alios</a> <a href="/tags/Alios源码分析/" style="font-size: 10px;">Alios源码分析</a> <a href="/tags/Alistudio/" style="font-size: 10px;">Alistudio</a> <a href="/tags/Javascript/" style="font-size: 10px;">Javascript</a> <a href="/tags/PageIPC/" style="font-size: 10px;">PageIPC</a> <a href="/tags/Settings/" style="font-size: 15px;">Settings</a> <a href="/tags/SettingsProvider/" style="font-size: 10px;">SettingsProvider</a> <a href="/tags/YunOS/" style="font-size: 20px;">YunOS</a> <a href="/tags/getRunningPages/" style="font-size: 10px;">getRunningPages</a> <a href="/tags/pagemanagerd/" style="font-size: 10px;">pagemanagerd</a> <a href="/tags/seed/" style="font-size: 10px;">seed</a> <a href="/tags/基础/" style="font-size: 10px;">基础</a> <a href="/tags/特性/" style="font-size: 10px;">特性</a>
     </div>
   </div>
 
@@ -227,7 +218,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
     </div>
   </div>
 
@@ -240,15 +231,15 @@
       <ul>
         
           <li>
+            <a href="/2018/06/04/Alios pagemgd_seed/">Alios pagemanagerd与seed通信</a>
+          </li>
+        
+          <li>
             <a href="/2018/05/22/Alios Settings/">Alios Settings模块学习</a>
           </li>
         
           <li>
             <a href="/2018/05/18/Alios PageIPC/">Alios PageIPC getRunningPages源码分析</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/18/Alios pagemgd_seed/">Alios pagemanagerd与seed通信</a>
           </li>
         
           <li>
