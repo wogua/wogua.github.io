@@ -1,0 +1,25 @@
+{
+    "domain": {
+        "name": "aicar.szlanyou.com",
+        "use_sdk": 1,
+        "version_code": 1,
+        "version": "1.0.0",
+        "supports_screens": "large",
+        "default-locale": "zh-CN",
+        "permission": {
+            "use_permission": [
+            ]
+        }
+    },
+    "pages": [
+        {
+            "uri": "page://aicar.szlanyou.com/homePage",
+			"title": "aicar",
+            "content_path": "src/homePage.js",
+            "version_code": 1,
+            "version": "1.0.0",
+            "main": true,
+            "icon": "res/default/images/home_ic_aicar.png"
+        }
+    ]
+}

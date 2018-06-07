@@ -1,0 +1,13 @@
+{
+    "ic_home_multi_multiState": {
+        "normal": {
+            "src": "{img(ic_home_multi_normal.png)}"
+        },
+        "pressed": {
+            "src": "{img(ic_home_multi_pressed.png)}"
+        },
+        "disabled": {
+            "src": "{img(ic_home_multi_disable.png)}"
+        }
+    }
+}
