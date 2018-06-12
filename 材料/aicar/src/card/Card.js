@@ -7,6 +7,7 @@ class Card extends ICard{
 
     constructor(page) {
 		this._page = page;
+		this._id = null;
 		this._rootView = null;
 		this._subWindow = null;
 		this._contentView = null;
@@ -14,6 +15,14 @@ class Card extends ICard{
 	
 	get page(){
 		return this._page;
+	}
+	
+	get id(){
+		return this._id;
+	}
+	
+	set id(id){
+		this._id = id;
 	}
 	
 	get contentView(){

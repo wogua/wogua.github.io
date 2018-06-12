@@ -5,7 +5,8 @@ const Page = RequireRouter.getRequire("yunos/page/Page");
 class CardManagerImpl{
 	constructor(page) {
 		this._page = page;
-		this._cardView = null;//当前card
+		this._curCard = null;//当前card
+		this._cards = {};// map for cards, key:id  value:card
 		this._isShow = false;
         this._isDestroy = false;
 	}
@@ -15,18 +16,18 @@ class CardManagerImpl{
 	}
 	
 	isEmpty(){
-		return this._cardView === null;
+		return this._curCard === null;
 	}
 	
 	doShow(){
-		if (this._cardView && !this._cardView.isShow) {
-            this._cardView.doShow();
+		if (this._curCard && !this._curCard.isShow) {
+            this._curCard.doShow();
         }
 	}
 	
 	doHide(){
-		if (this._cardView && this._cardView.isShow) {
-            this._cardView.doHide();
+		if (this._curCard && this._curCard.isShow) {
+            this._curCard.doHide();
         }
 	}
 	
@@ -37,11 +38,11 @@ class CardManagerImpl{
 	
 	doBackPress(forceFinish){
 		if (this._isDestroy) {
-            return;
+            return false;
         }
 		
-		if (this._cardView) {
-            if (this._cardView.doBackPress(forceFinish)) {
+		if (this._curCard) {
+            if (this._curCard.doBackPress(forceFinish)) {
                 return true;
             } else {
                 return false;
@@ -50,10 +51,18 @@ class CardManagerImpl{
 		return false;
 	}
 	
+	showCardById(cardId){
+		let map = _cards;
+		if (_cards[cardId] === null) {
+			
+		}
+		card = 
+	}
+	
 	showCard(card){
 		if (this._isDestroy) {
             if (scene) {
-                scene.doDestroy();
+                card.doDestroy();
             }
             return;
         }
@@ -64,36 +73,36 @@ class CardManagerImpl{
             return;
         }
 		
-		if (!this._cardView) {
-            this._cardView = new NormalCard(this._page);
+		if (!this._curCard) {
+            this._curCard = new NormalCard(this._page);
             if (this._isShow) {
-                this._cardView.doShow();
+                this._curCard.doShow();
             }
             let self = this;
-            this._cardView.finishCallBack = function (stackItem) {
+            this._curCard.finishCallBack = function (stackItem) {
                 if (self._isDestroy) {
                     return;
                 }
                 self._page.stopPage();
             };
             this._page.window.removeAllChildren();
-            this._page.window.addChild(this._cardView.contentView);
+            this._page.window.addChild(this._curCard.contentView);
         }
 	}
 	
 	finishCard(card){
-		if (this._cardView) {
-            this._cardView.finishScene(scene, true);
+		if (this._curCard) {
+            this._curCard.finishScene(scene, true);
         }
 	}
 	
 	cleanCards(){
-		if(this._cardView){
+		if(this._curCard){
 			try {
-                this._page.window.removeChild(this._cardView.contentView);
+                this._page.window.removeChild(this._curCard.contentView);
             } catch (e) {}
-			this._cardView.doDestroy();
-			this._cardView = null;
+			this._curCard.doDestroy();
+			this._curCard = null;
 		}
 	}
 }

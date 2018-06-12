@@ -14,7 +14,7 @@ class CardManager = {
     getInstance: function() {
         if (this.cardManagerImpl === null) {
             let CardManagerImpl = RequireRouter.getRequire("./CardManagerImpl");
-            let Page = RequireRouter.getRequire("./HomePage");
+            let Page = RequireRouter.getRequire("../HomePage");
             let page = Page.getInstance();
             this.cardManagerImpl = new CardManagerImpl(page);
         }
