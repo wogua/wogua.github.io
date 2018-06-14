@@ -7,18 +7,18 @@ class HomePage extends Page {
 
     onCreate() {
 		super.onCreate();
-		
+
 		let CardManager = RequireRouter.getRequire("./card/CardManager");
         this._cardManager = CardManager.getInstance();
 		CardManager.init(this.window.width, this.window.height);
-		
-		this._tabBar = null;//顶部自定义title栏
-		
-		this._titleBar = null;//底部自定义tab栏
-		
+
+		this._tabBar = new TabBar(this);//顶部自定义title栏
+
+		this._titleBar = new TitleBar(this);//底部自定义tab栏
+
 		this.init();
     }
-	
+
 	init(){
 		if (!this._hasInit) {
 			this._hasInit = true;
@@ -27,7 +27,7 @@ class HomePage extends Page {
             var layout = new RelativeLayout();
             layout.defaultLayoutParam = {align: {left: "parent", top: "parent", bottom: "parent", right: "parent"}};
             this.window.layout = layout;
-			
+
 			//onLink可能在init前面调用？
 			if (this.reloadlink) {
                 let link = this.reloadlink;
@@ -36,7 +36,7 @@ class HomePage extends Page {
             }
 		}
 	}
-	
+
 	onLink(link){
 		this._hasHide = false;
 		log.I(TAG, "onLink:" + JSON.stringify(link));
@@ -46,7 +46,7 @@ class HomePage extends Page {
         }
         this.linkToCard(link);
 	}
-	
+
 	onStop() {
 		this._hasStop = true;
         super.onStop();
@@ -56,24 +56,24 @@ class HomePage extends Page {
             this._cardManager = null;
         }
 	}
-	
+
 	onStart() {
 		super.onStart();
 	}
-	
+
 	onShow() {
 		this._hasHide = false;
         this._isShow = true;
         super.onShow();
         this._cardManager.doShow();
 	}
-	
+
 	onHide() {
 		this._isShow = false;
         super.onHide();
         this._cardManager.doHide();
 	}
-	
+
 	//同onStop
 	onDestroy() {
 		if (this._cardManager) {
@@ -81,16 +81,16 @@ class HomePage extends Page {
             this._cardManager = null;
         }
 	}
-	
+
 	linkToCard(link) {
 		//如果有指定跳转页面，则跳到对应card
 		if (link && link.action) {
-			
+
 		}else {//默认跳到车辆检测
             this.gotoCardoctor();
         }
 	}
-	
+
 	/**
 	* 退出时页面切换动画
 	*/
@@ -99,13 +99,13 @@ class HomePage extends Page {
         let transition = new PageTransition(PageTransition.TransitionType.TRANSITION_TYPE_SLIDE_IN_OUT_BOTTOM);
         this.overridePendingTransition(transition);
     }
-	
+
 	onBackKey() {
 		//如果有卡片在显示，且卡片能成功消费掉backkey事件则直接返回
 		if (this._isShow && this._cardManager.doBackPress(false)) {
             return true;
         }
-		
+
 		//如果已经在首页，则退出应用
 		if (!this.isNormal) {
             if (this._isShow) {
@@ -116,9 +116,9 @@ class HomePage extends Page {
         }
 		return super.onBackKey();
 	}
-	
+
 	/**
-	* 应用内部调用的退出事件，强制退出
+	* 应用内部调用的退出事件
 	*/
 	onBackKeyFromApp() {
         if (!this._cardManager.doBackPress(true)) {
@@ -128,13 +128,13 @@ class HomePage extends Page {
             this.hidePageInApp();
         }
     }
-	
-	
+
+
 	hidePage() {
         this._hasHide = true;
         super.hidePage();
     }
-	
+
 	hidePageInApp() {
         log.D(TAG, "hidePageInApp");
         if (this._hasHide) {
@@ -146,7 +146,7 @@ class HomePage extends Page {
         }
         super.stopPage();
     }
-	
+
 	stopPage() {
         if (this._hasStop) {
             return;
@@ -156,27 +156,27 @@ class HomePage extends Page {
         }
         super.stopPage();
     }
-	
+
 	//跳到汽车诊断界面
 	gotoCardoctor(){
-		
+		_cardManager.showCardById(CardManager.CARS.cardoctor);
 	}
-	
+
 	//跳到车辆服务界面
 	gotoCarService(){
-		
+        _cardManager.showCardById(CardManager.CARS.cardoctor);
 	}
-	
+
 	//跳到消息中心界面
 	gotoMessagesCenter(){
-		
+        _cardManager.showCardById(CardManager.CARS.cardoctor);
 	}
-	
+
 	//跳到账号管理界面
 	gotoUsercenter(){
-		
+        _cardManager.showCardById(CardManager.CARS.cardoctor);
 	}
-	
+
 	onTabChanged(tabId){
 		switch (tabId) {
 			case TabBar.TABTYPE.CARDOCTOR://车辆检测

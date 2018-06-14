@@ -1,0 +1,12 @@
+<CompositeView id= "root_container" layout="{layout.xxx}">
+
+	<!-- 顶部title栏 -->
+	<include markup="title_bar_container" id="title_bar"  visibility="{enum.View.Visibility.Hidden}"/>
+	
+	<!-- 中间卡片容器 -->
+	<include markup="card_container" id="card_container"  visibility="{enum.View.Visibility.Hidden}"/>
+	
+	<!-- 底部tab栏 -->
+	<include markup="tab_bar_container" id="tab_bar"  visibility="{enum.View.Visibility.Hidden}"/>
+
+</CompositeView>

@@ -7,6 +7,7 @@ const HttpHelper = require(".HttpHelper");
 
 var DatasProvider = {
     getHttpClient: function(config){
+		//判断config
         if(!this._httpHelper){
             this._httpHelper = new HttpHelper(config);
         }

@@ -11,36 +11,38 @@ class Card extends ICard{
 		this._rootView = null;
 		this._subWindow = null;
 		this._contentView = null;
+		this._leftItem = null;
+		this._rightItem = null;
     }
-	
+
 	get page(){
 		return this._page;
 	}
-	
+
 	get id(){
 		return this._id;
 	}
-	
+
 	set id(id){
 		this._id = id;
 	}
-	
+
 	get contentView(){
 		return this._rootView;
 	}
-	
+
 	set contentView(view){
 		this._contentView.removeAllChildren();
 		_rootView = view;
 	}
-	
+
 	get subWindow() {
         return this._subWindow;
     }
     set subWindow(subWindow) {
         this._subWindow = subWindow;
     }
-	
+
 	closeWindow() {
         if (this._subWindow) {
             this._subWindow.removeAllChildren();
@@ -48,21 +50,21 @@ class Card extends ICard{
             this._subWindow = null;
         }
     }
-	
+
 	doShow(){
 		super.doShow();
 		if (this._subWindow) {
             this._subWindow.show();
         }
 	}
-	
+
 	doHide(){
 		super.doShow();
 		if (this._subWindow) {
             this._subWindow.hide();
         }
 	}
-	
+
 	doDestroy(){
 		super.doShow();
 		if (this._rightItem) {
@@ -80,4 +82,9 @@ class Card extends ICard{
         }
         this._page = null;
 	}
+
+    doBackPress(){
+        _page.cardManagerImpl.showCard(_leftItem);
+    }
+	
 }

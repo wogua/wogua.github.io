@@ -1,7 +1,7 @@
 "use strict";
 
 const Page = RequireRouter.getRequire("yunos/page/Page");
-
+const cardsList = require("../cards_config.js")；
 class CardManagerImpl{
 	constructor(page) {
 		this._page = page;
@@ -9,38 +9,43 @@ class CardManagerImpl{
 		this._cards = {};// map for cards, key:id  value:card
 		this._isShow = false;
         this._isDestroy = false;
+		this.initCards();
 	}
 	
+	initCards(){
+		let cardsList = require("../cards_config.js");
+	}
+
 	get isDestory(){
 		return this._isDestroy;
 	}
-	
+
 	isEmpty(){
 		return this._curCard === null;
 	}
-	
+
 	doShow(){
 		if (this._curCard && !this._curCard.isShow) {
             this._curCard.doShow();
         }
 	}
-	
+
 	doHide(){
 		if (this._curCard && this._curCard.isShow) {
             this._curCard.doHide();
         }
 	}
-	
+
 	doDestroy(){
 		this.cleanScenes();
         this._isDestroy = true;
 	}
-	
+
 	doBackPress(forceFinish){
 		if (this._isDestroy) {
             return false;
         }
-		
+
 		if (this._curCard) {
             if (this._curCard.doBackPress(forceFinish)) {
                 return true;
@@ -50,29 +55,34 @@ class CardManagerImpl{
         }
 		return false;
 	}
-	
+
 	showCardById(cardId){
 		let map = _cards;
-		if (_cards[cardId] === null) {
-			
+		if (_cards[cardId] === undefined) {
+			let LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
+			card =  LayoutManager.loadSync(cardId, {context: page});
+			_cards[cardId] = card;
+		}else{
+			card = _cards[cardId];
 		}
-		card = 
+		_showCard(card);
 	}
-	
+
 	showCard(card){
+		_curCard = card;
 		if (this._isDestroy) {
-            if (scene) {
-                card.doDestroy();
-            }
+            // if (card) {
+            //     card.doDestroy();
+            // }
             return;
         }
-		
+
 		if (scene.contentView === null) {
             scene.doDestroy();
             log.E(TAG, "there no card view");
             return;
         }
-		
+
 		if (!this._curCard) {
             this._curCard = new NormalCard(this._page);
             if (this._isShow) {
@@ -89,13 +99,13 @@ class CardManagerImpl{
             this._page.window.addChild(this._curCard.contentView);
         }
 	}
-	
+
 	finishCard(card){
 		if (this._curCard) {
             this._curCard.finishScene(scene, true);
         }
 	}
-	
+
 	cleanCards(){
 		if(this._curCard){
 			try {
