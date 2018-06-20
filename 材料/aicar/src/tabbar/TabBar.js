@@ -20,18 +20,18 @@ const TAB_CARD = {
 
 
 class TabBar extends CompositeView{
-	constructor(page) {
-        super(page);
-		this._page = page;
+	constructor() {
+        super();
+		this._page = null;
 		this._tabs = {};//map{key:tabId, value:TabView}
-        this.setupViews(page);
     }
 
-	setupViews(page){
-		const LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
-        this._contentView = LayoutManager.loadSync("tab_bar_container", {context: page});
+	init(page){
+        this._page = page;
 
-        this.addChild(this._contentView);
+		// const LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
+        // this._contentView = LayoutManager.loadSync("tab_bar_container", {context: page});
+        // this.addChild(this._contentView);
         return this;
 	}
 

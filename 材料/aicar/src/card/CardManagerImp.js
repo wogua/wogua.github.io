@@ -1,120 +1,173 @@
 "use strict";
 
 const Page = RequireRouter.getRequire("yunos/page/Page");
-const cardsList = require("../cards_config.js")；
-class CardManagerImpl{
-	constructor(page) {
-		this._page = page;
-		this._curCard = null;//当前card
-		this._cards = {};// map for cards, key:id  value:card
-		this._isShow = false;
+const _cardsConfig = require("../cards_config.js")；
+class CardManagerImpl {
+    constructor(page) {
+        this._page = page;
+        this._cardContainer = null;
+        this._curCard = null; //当前card
+        this._cardViews = {}; // map for cardViews, key:id  value:card
+        this._curStack = null; //当前Stack
+        this._cardStacks = {}; //map for CardStack, key:id  value:CardStack
+        this._isShow = false;
         this._isDestroy = false;
-		this.initCards();
-	}
-	
-	initCards(){
-		let cardsList = require("../cards_config.js");
-	}
+    }
 
-	get isDestory(){
-		return this._isDestroy;
-	}
+    init(condContainer) {
+        this._cardContainer = condContainer;
+        // showCardByConfig(_cardsConfig.CAR_DOCTOR);
+    }
 
-	isEmpty(){
-		return this._curCard === null;
-	}
+    get isDestory() {
+        return this._isDestroy;
+    }
 
-	doShow(){
-		if (this._curCard && !this._curCard.isShow) {
+    isEmpty() {
+        return this._curCard === null;
+    }
+
+    doShow() {
+        if (this._curCard && !this._curCard.isShow) {
             this._curCard.doShow();
         }
-	}
+    }
 
-	doHide(){
-		if (this._curCard && this._curCard.isShow) {
+    doHide() {
+        if (this._curCard && this._curCard.isShow) {
             this._curCard.doHide();
         }
-	}
+    }
 
-	doDestroy(){
-		this.cleanScenes();
+    doDestroy() {
+        this.cleanCards();
         this._isDestroy = true;
-	}
+    }
 
-	doBackPress(forceFinish){
-		if (this._isDestroy) {
+    /**
+     * [doBackPress 处理返回事件]
+     * @param  {[type]} forceFinish [description]
+     * @return {[type]}             [true：消费掉返回事件； false：反之]
+     */
+    doBackPress(forceFinish) {
+        if (this._isDestroy) {
             return false;
         }
 
-		if (this._curCard) {
-            if (this._curCard.doBackPress(forceFinish)) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-		return false;
-	}
-
-	showCardById(cardId){
-		let map = _cards;
-		if (_cards[cardId] === undefined) {
-			let LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
-			card =  LayoutManager.loadSync(cardId, {context: page});
-			_cards[cardId] = card;
-		}else{
-			card = _cards[cardId];
-		}
-		_showCard(card);
-	}
-
-	showCard(card){
-		_curCard = card;
-		if (this._isDestroy) {
-            // if (card) {
-            //     card.doDestroy();
-            // }
-            return;
-        }
-
-		if (scene.contentView === null) {
-            scene.doDestroy();
-            log.E(TAG, "there no card view");
-            return;
-        }
-
-		if (!this._curCard) {
-            this._curCard = new NormalCard(this._page);
-            if (this._isShow) {
-                this._curCard.doShow();
-            }
-            let self = this;
-            this._curCard.finishCallBack = function (stackItem) {
-                if (self._isDestroy) {
-                    return;
+        if (this._curCard) {
+            let card = this._curCard;
+            if (card.)
+                if (this._curCard.doBackPress(forceFinish)) {
+                    return true;
+                } else {
+                    return false;
                 }
-                self._page.stopPage();
-            };
-            this._page.window.removeAllChildren();
-            this._page.window.addChild(this._curCard.contentView);
         }
-	}
+        return false;
+    }
 
-	finishCard(card){
-		if (this._curCard) {
-            this._curCard.finishScene(scene, true);
+    doBackInStack(stackId) {
+        let cardStack = _cardViews[stackId];
+        if (cardStack) {
+            cardStack
         }
-	}
+    }
 
-	cleanCards(){
-		if(this._curCard){
-			try {
-                this._page.window.removeChild(this._curCard.contentView);
+    showCardByConfig(cardConfig) {
+        loadCard(cardConfig.layout, cardConfig.title cardConfig.cardStack);
+    }
+
+    loadCard(cardId, cardTitle, stackId) {
+        if (cardId || stackId) {
+            throw new Error("showCardById error, cardId or stackId is null");
+        }
+
+        //init card if undefined
+        if (_cardViews[cardId] === undefined) {
+            _cardViews[cardId] = new Card(this._page, cardId,cardTitle, stackId, this._cardContainer);
+        }
+        let card = _cardViews[cardId];
+
+        //init cardStack if undefined
+        if (this._cardStacks[stackId] == undefined) {
+            this._cardStacks[stackId] = new CardStack(this._page, stackId, this._cardContainer);
+        }
+        let cardStack = this._cardStacks[stackId];
+
+        showCardInStack(card, cardStack);
+    }
+
+    showCardById(cardId) {
+        if (cardId) {
+            throw new Error("showCardById error, cardId is null");
+        }
+        if (_cardViews[cardId] === undefined) {
+            _cardViews[cardId] = new Card(this._page, cardId, stackId, this._cardContainer);
+        }
+        let card = _cardViews[cardId];
+
+        showCard(card);
+    }
+
+    showCard(card) {
+        if (_cardViews[cardId] === undefined) {
+            _cardViews[cardId] = new Card(this._page, cardId, stackId, this._cardContainer);
+        }
+        let card = _cardViews[cardId];
+
+        let stackId = card.stackId;
+        if (!stackId) {
+            throw new Error("showCard faild, there is a bad card : " + card.title);
+        }
+
+        if (this._cardStacks[stackId] == undefined) {
+            this._cardStacks[stackId] = new CardStack(this._page, stackId, this._cardContainer);
+        }
+        let cardStack = this._cardStacks[stackId];
+
+        showCardInStack(card, cardStack);
+    }
+
+    showCardInStack(card, cardStack) {
+        this._curCard = card;
+        if (this._isDestroy) {
+            if (card) {
+                card.doDestroy();
+            }
+            return;
+        }
+
+        if (this._curStack.contentView === null) {
+            log.E(TAG, "there no curStack contentView");
+            return;
+        }
+
+        //show the stack
+        if (_curStack !== cardStack) {
+            this._curStack = cardStack;
+            this._cardContainer.removeAllChildren();
+            this._cardContainer.addChild(this._curStack.contentView);
+        }
+
+        cardStack.showCard(card);
+    }
+
+    finishCard(card) {
+        if (card) {
+            card.finish();
+        }
+    }
+
+    cleanCards() {
+        if (this._curCard) {
+            try {
+                this._cardContainer.removeChild(this._curCard.contentView);
             } catch (e) {}
-			this._curCard.doDestroy();
-			this._curCard = null;
-		}
-	}
+            this._curCard.doDestroy();
+            this._curCard = null;
+            this._cardViews = {};
+        }
+    }
 }
 
 module.exports = CardManagerImpl;

@@ -5,14 +5,17 @@
 */
 class Card extends ICard{
 
-    constructor(page) {
+    constructor(page,id,cardTitle,stackId,cardContainer) {
 		this._page = page;
-		this._id = null;
-		this._rootView = null;
-		this._subWindow = null;
-		this._contentView = null;
-		this._leftItem = null;
-		this._rightItem = null;
+		this._id = id;
+        this._stackId = stackId;
+        this._title = cardTitle;
+		this._cardContainer = cardContainer;//card容器控件
+
+        let LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
+		this._contentView = LayoutManager.loadSync(id, {
+            context: page
+        });
     }
 
 	get page(){
@@ -27,64 +30,44 @@ class Card extends ICard{
 		this._id = id;
 	}
 
-	get contentView(){
-		return this._rootView;
+    get stackId(){
+		return this._stackId;
 	}
 
-	set contentView(view){
-		this._contentView.removeAllChildren();
-		_rootView = view;
+	set stackId(stackId){
+		this._stackId = stackId;
 	}
-
-	get subWindow() {
-        return this._subWindow;
-    }
-    set subWindow(subWindow) {
-        this._subWindow = subWindow;
-    }
-
-	closeWindow() {
-        if (this._subWindow) {
-            this._subWindow.removeAllChildren();
-            this._subWindow.destroy();
-            this._subWindow = null;
-        }
-    }
 
 	doShow(){
 		super.doShow();
-		if (this._subWindow) {
-            this._subWindow.show();
+		if (this._contentView) {
+            this._contentView.visibility = View.Visibility.Visible;
         }
 	}
 
 	doHide(){
 		super.doShow();
-		if (this._subWindow) {
-            this._subWindow.hide();
+		if (this._contentView) {
+            this._contentView.visibility = View.Visibility.Hidden;
         }
 	}
 
 	doDestroy(){
 		super.doShow();
-		if (this._rightItem) {
-            this._rightItem.destroy();
-            this._rightItem = null;
-        }
-        if (this._leftItem) {
-            this._leftItem.destroy();
-            this._leftItem = null;
-        }
-        if (this._rootView) {
-            this._rootView.destroyAll();
-            this._rootView.destroy(true);
-            this._rootView = null;
+        if (this._contentView) {
+            this._contentView.destroyAll();
+            this._contentView.destroy(true);
+            this._contentView = null;
         }
         this._page = null;
 	}
 
     doBackPress(){
-        _page.cardManagerImpl.showCard(_leftItem);
+        if(this._stackId){//调用对应的_stackId做出栈操作
+            CardManager.getInstance().doBackInStack(this._stackId);
+        }else{//已经是栈顶card
+            this._page.hidePageInApp();
+        }
     }
-	
+
 }
