@@ -1,21 +1,26 @@
 "use strict";
-
+let RequireRouter = require("./RequireRouter");
+const ICard = RequireRouter.getRequire("./ICard");
+const View = RequireRouter.getRequire("yunos/ui/view/View");
+let CardManager = RequireRouter.getRequire("./card/CardManager");
 /**
 *卡片的具体实现
 */
 class Card extends ICard{
-
     constructor(page,id,cardTitle,stackId,cardContainer) {
+        super();
 		this._page = page;
 		this._id = id;
         this._stackId = stackId;
         this._title = cardTitle;
 		this._cardContainer = cardContainer;//card容器控件
 
-        let LayoutManager = Require.getRequire("yunos/ui/markup/LayoutManager");
-		this._contentView = LayoutManager.loadSync(id, {
-            context: page
-        });
+        let LayoutManager = RequireRouter.getRequire("yunos/ui/markup/LayoutManager");
+        if(id){
+            this._contentView = LayoutManager.loadSync(id, {
+                context: page
+            });
+        }
     }
 
 	get page(){
@@ -36,6 +41,14 @@ class Card extends ICard{
 
 	set stackId(stackId){
 		this._stackId = stackId;
+	}
+
+    get contentView(){
+		return this._contentView;
+	}
+
+	set contentView(contentView){
+		this._contentView = contentView;
 	}
 
 	doShow(){
@@ -71,3 +84,5 @@ class Card extends ICard{
     }
 
 }
+
+module.exports = Card;

@@ -1,7 +1,10 @@
 "use strict";
 
-const Page = RequireRouter.getRequire("yunos/page/Page");
-const _cardsConfig = require("../cards_config.js")；
+// const Page = RequireRouter.getRequire("yunos/page/Page");
+const _cardsConfig = require("./CardsConfig");
+let RequireRouter = require("./RequireRouter");
+const CardStack = RequireRouter.getRequire("./CardStack");
+let TAG = "AiCar/CardManager";
 class CardManagerImpl {
     constructor(page) {
         this._page = page;
@@ -24,18 +27,18 @@ class CardManagerImpl {
     }
 
     isEmpty() {
-        return this._curCard === null;
+        return this._curStack === null;
     }
 
     doShow() {
-        if (this._curCard && !this._curCard.isShow) {
-            this._curCard.doShow();
+        if (this._curStack && !this._curStack.isShow) {
+            this._curStack.doShow();
         }
     }
 
     doHide() {
-        if (this._curCard && this._curCard.isShow) {
-            this._curCard.doHide();
+        if (this._curStack && this._curStack.isShow) {
+            this._curStack.doHide();
         }
     }
 
@@ -54,39 +57,27 @@ class CardManagerImpl {
             return false;
         }
 
-        if (this._curCard) {
-            let card = this._curCard;
-            if (card.)
-                if (this._curCard.doBackPress(forceFinish)) {
-                    return true;
-                } else {
-                    return false;
-                }
+        if (this._curStack) {
+            if (this._curStack.doBackPress()) {
+                return true;
+            } else {
+                return false;
+            }
         }
         return false;
     }
 
-    doBackInStack(stackId) {
-        let cardStack = _cardViews[stackId];
-        if (cardStack) {
-            cardStack
-        }
-    }
-
     showCardByConfig(cardConfig) {
-        loadCard(cardConfig.layout, cardConfig.title cardConfig.cardStack);
-    }
+        let cardId = cardConfig.layout;
+        let cardTitle = cardConfig.title;
+        let cardPath = cardConfig.cardPath;
+        let stackId = cardConfig.cardStack;
 
-    loadCard(cardId, cardTitle, stackId) {
-        if (cardId || stackId) {
-            throw new Error("showCardById error, cardId or stackId is null");
+        if (!cardId || !stackId || !cardPath) {
+            throw new Error("showCardByConfig error, cardId or stackId or cardPath is null");
         }
 
-        //init card if undefined
-        if (_cardViews[cardId] === undefined) {
-            _cardViews[cardId] = new Card(this._page, cardId,cardTitle, stackId, this._cardContainer);
-        }
-        let card = _cardViews[cardId];
+        let card = this.createCard(cardId, cardTitle, cardPath, stackId);
 
         //init cardStack if undefined
         if (this._cardStacks[stackId] == undefined) {
@@ -94,27 +85,33 @@ class CardManagerImpl {
         }
         let cardStack = this._cardStacks[stackId];
 
-        showCardInStack(card, cardStack);
+        this.showCardInStack(card, cardStack);
     }
 
     showCardById(cardId) {
         if (cardId) {
             throw new Error("showCardById error, cardId is null");
         }
-        if (_cardViews[cardId] === undefined) {
-            _cardViews[cardId] = new Card(this._page, cardId, stackId, this._cardContainer);
+        if (this._cardViews[cardId] === undefined) {
+            let cardPath = this.getCardPathById(cardId);
+            let stackId = this.getCardStackById(cardId);
+            let CustomCard = require(cardPath);
+            try{
+                this._cardViews[cardId] = new CustomCard(this._page, cardId, stackId, this._cardContainer);
+            }catch (e){
+                this._cardViews[cardId] = null;
+            }
         }
-        let card = _cardViews[cardId];
+        let card = this._cardViews[cardId];
 
-        showCard(card);
+        this.showCard(card);
     }
 
     showCard(card) {
-        if (_cardViews[cardId] === undefined) {
-            _cardViews[cardId] = new Card(this._page, cardId, stackId, this._cardContainer);
+        if(!card){
+            log.e("showCard failed because card is null");
+            return;
         }
-        let card = _cardViews[cardId];
-
         let stackId = card.stackId;
         if (!stackId) {
             throw new Error("showCard faild, there is a bad card : " + card.title);
@@ -125,7 +122,7 @@ class CardManagerImpl {
         }
         let cardStack = this._cardStacks[stackId];
 
-        showCardInStack(card, cardStack);
+        this.showCardInStack(card, cardStack);
     }
 
     showCardInStack(card, cardStack) {
@@ -143,30 +140,66 @@ class CardManagerImpl {
         }
 
         //show the stack
-        if (_curStack !== cardStack) {
+        if (this._curStack !== cardStack) {
             this._curStack = cardStack;
             this._cardContainer.removeAllChildren();
             this._cardContainer.addChild(this._curStack.contentView);
         }
 
-        cardStack.showCard(card);
+        this._curStack.showCard(card);
     }
 
-    finishCard(card) {
-        if (card) {
-            card.finish();
-        }
-    }
+    // finishCard(card) {
+    //     if (card) {
+    //         card.finish();
+    //     }
+    // }
 
     cleanCards() {
-        if (this._curCard) {
-            try {
-                this._cardContainer.removeChild(this._curCard.contentView);
-            } catch (e) {}
-            this._curCard.doDestroy();
-            this._curCard = null;
-            this._cardViews = {};
+        this._cardContainer.removeAllChildren();
+        if (this._curStack) {
+            this._curStack.doDestroy();
+            this._curStack = null;
         }
+        this._cardViews = {};
+    }
+
+    createCard(cardId, cardTitle, cardPath, stackId) {
+        let card = null;
+        //init card if undefined
+        if (this._cardViews[cardId] === undefined) {
+            if(!cardPath){
+                return null;
+            }
+            let CustomCard = require(cardPath);
+            try{
+                this._cardViews[cardId] = new CustomCard(this._page, cardId, cardTitle, stackId, this._cardContainer);
+            }catch (e) {
+                log.E(TAG, "createCard failed, error path??? path="+cardPath);
+                return null;
+            }
+        } else {
+            card = this._cardViews[cardId];
+        }
+        return card;
+    }
+
+    getCardPathById(cardId) {
+        for (var s in _cardsConfig){
+            if(_cardsConfig[s].layout === cardId){
+                return _cardsConfig[s].cardPath;
+            }
+        }
+        return null;
+    }
+
+    getCardStackById(cardId) {
+        for (var s in _cardsConfig){
+            if(_cardsConfig[s].layout === cardId){
+                return _cardsConfig[s].cardStack;
+            }
+        }
+        return null;
     }
 }
 

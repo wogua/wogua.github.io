@@ -4,7 +4,8 @@
  * 第二层参数
  * 	title：卡片的标题id R.getString(title);
  * 	layout: 卡片的布局id LayoutManager.loadSync(layout,);
- * 	cardStack: 对应的栈顶card，null表示为栈顶主card
+ * 	path: 卡片的具体实现 let customCard = require(path); let card = new customCard(...);
+ * 	cardStack: 卡片所在的栈
  *
  */
 var CardsConfig = {
@@ -12,55 +13,64 @@ var CardsConfig = {
     CAR_DOCTOR: {
         title: "main_aicar_doctor",
         layout: "card_cardoctor",
-        cardStack: "card_cardoctor"
+        cardPath:"xxx",
+        cardStack: "STACK_CAR_DOCTOR"
     },
 
     CAR_REPORT: { //诊断报告
         title: "xxx",
         layout: "xxx",
-        cardStack: "card_cardoctor"
-    }，
+        cardPath:"xxx",
+        cardStack: "STACK_CAR_DOCTOR"
+    },
 
     /* ================车辆服务=============== */
     CAR_SERVICE: {
         title: "main_aicar_server",
         layout: "card_carservice",
-        cardStack: "card_cardoctor"
+        cardPath:"xxx",
+        cardStack: "STACK_CAR_SERVICE"
     },
 
     /* ================消息中心=============== */
     MESSAGE_CENTER: {
         title: "main_aicar_messages",
         layout: "card_messagecenter",
-        cardStack: "card_messagecenter"
+        cardPath:"./usercenter/MessageCenterCard.js",
+        cardStack: "STACK_MESSAGE_CENTER"
     },
 
     MESSAGE_DETAILS: { //消息详情
         title: "xxx",
         layout: "xxx",
-        cardStack: "card_messagecenter"
+        cardPath:"xxx",
+        cardStack: "STACK_MESSAGE_CENTER"
     },
 
     /* ================用户中心=============== */
     USER_CENTER: {
-        title: "main_aicar_messages",
+        title: "main_aicar_usercenter",
         layout: "card_usercenter",
-        cardStack: "card_usercenter"
-    }，
+        path:"./usercenter/UserCenterCard.js",
+        cardStack: "STACK_USER_CENTER"
+    },
     USER_LOGIN: { //用户登录
         title: "xxx",
         layout: "xxx",
-        cardStack: "card_usercenter"
-    }，
+        cardPath:"xxx",
+        cardStack: "STACK_USER_CENTER"
+    },
     USER_REGIST: { //新用户注册
         title: "xxx",
         layout: "xxx",
-        cardStack: "card_usercenter"
+        cardPath:"xxx",
+        cardStack: "STACK_USER_CENTER"
     },
-    USER_REGIST: { //车辆绑定
+    USER_BINDING: { //车辆绑定
         title: "xxx",
         layout: "xxx",
-        cardStack: "card_usercenter"
+        cardPath:"xxx",
+        cardStack: "STACK_USER_CENTER"
     }
 }
 module.exports = CardsConfig;

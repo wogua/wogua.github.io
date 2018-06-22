@@ -1,0 +1,17 @@
+{
+    "title_bar_layout": {
+        "type": "RelativeLayout",
+        "params": {
+            "0": {
+                "align": { "left": "parent", "top": "parent", "right": "parent" },
+                "margin": { "left": "{dp(20)}" }
+            },
+            "1": {
+                "align": {
+                    "center": "parent"
+                },
+            }
+
+        }
+    }
+}

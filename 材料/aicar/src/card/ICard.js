@@ -1,9 +1,8 @@
 
 "use strict";
-let TAG = "StackItem";
 /**
 * 本应用中的页面的抽象，其中_view是本页面ICard的具体view
-* 
+*
 */
 class ICard {
     constructor() {

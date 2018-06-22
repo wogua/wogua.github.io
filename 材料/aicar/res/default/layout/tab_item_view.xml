@@ -1,0 +1,10 @@
+<TextView
+    id="tab_item_text"
+    fontSize="30sp"
+    color="#FFFFFF"
+    background="#FF6600"
+    align="{enum.TextView.Align.Center}"
+    verticalAlign="{enum.TextView.VerticalAlign.Middle}"
+  />
+  <!-- width="{view.window.width}"
+  height="{view.window.height}" -->

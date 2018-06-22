@@ -1,10 +1,8 @@
 "use strict";
-
-const Page = RequireRouter.getRequire("yunos/page/Page");
-
-class CardManager = {
+let RequireRouter = require("./RequireRouter");
+var CardManager = {
     cardManagerImpl: null,
-    getInstance: function() {
+    getInstance: function () {
         if (this.cardManagerImpl === null) {
             let CardManagerImpl = RequireRouter.getRequire("./CardManagerImpl");
             let Page = RequireRouter.getRequire("../HomePage");

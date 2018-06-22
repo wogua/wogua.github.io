@@ -15,7 +15,7 @@
         {
             "uri": "page://aicar.szlanyou.com/homePage",
 			"title": "aicar",
-            "content_path": "src/homePage.js",
+            "content_path": "src/HomePage.js",
             "version_code": 1,
             "version": "1.0.0",
             "main": true,

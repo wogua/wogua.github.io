@@ -1,13 +1,13 @@
-<src.titlebar.TitleBar layout="{layout.xxx}">
+<custom.src.titlebar.TitleBar layout="{layout.xxx}">
 
 	<!-- 左边返回按钮 -->
 	<ImageView id="title_bar_backbt" width="{dp(50)}" height="{dp(50)}" scaleType="{enum.ImageView.ScaleType.Fitxy}" src="{img(xxx.png)}"/>
 
 	<!-- title文字 , 在backbt右边 -->
-	<TextView id="title_bar_name" height="{dp(50)}" color="#FFFFFF" fontSize="12sp" opacity="0.6" elideMode="{enum.TextView.ElideMode.ElideRight}"
-                 align="{enum.TextView.Align.Center}"  verticalAlign="{enum.TextView.VerticalAlign.Top}"/>
+	<TextView id="title_bar_name" width="{dp(300)}" height="{dp(50)}" color="#FF0000" fontSize="12sp" opacity="0.6" elideMode="{enum.TextView.ElideMode.ElideRight}"
+                 align="{enum.TextView.Align.Center}"  verticalAlign="{enum.TextView.VerticalAlign.Middle}"/>
 
 	<!-- 右边描述 -->
-	<TextView id="title_bar_name" height="{dp(50)}" color="#FFFFFF" fontSize="12sp" opacity="0.6" elideMode="{enum.TextView.ElideMode.ElideRight}"
-                 align="{enum.TextView.Align.Center}"  verticalAlign="{enum.TextView.VerticalAlign.Top}"/>
-</src.titlebar.TitleBar>
+	<!-- <TextView id="title_bar_right" height="{dp(50)}" color="#FFFFFF" fontSize="12sp" opacity="0.6" elideMode="{enum.TextView.ElideMode.ElideRight}"
+                 align="{enum.TextView.Align.Center}"  verticalAlign="{enum.TextView.VerticalAlign.Top}"/> -->
+</custom.src.titlebar.TitleBar>

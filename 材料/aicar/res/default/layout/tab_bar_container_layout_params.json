@@ -1,0 +1,28 @@
+{
+    "tab_bar_layout": {
+        "type": "GridLayout",
+        "attrs": {
+            "rows": 1,
+            "columns": 4,
+            "columnSpacing": 10
+        },
+        "params": {
+            "0": {
+                "align": "{{ {enum.GridLayout.Align.FillWidth} | {enum.GridLayout.Align.Bottom} }}",
+                "margin": {"bottom": "{dp(3)}"}
+            },
+            "1": {
+                "align": "{{ {enum.GridLayout.Align.FillWidth} | {enum.GridLayout.Align.Top} }}",
+                "margin": {"top": "{dp(3)}"}
+            },
+            "2": {
+                "align": "{{ {enum.GridLayout.Align.FillWidth} | {enum.GridLayout.Align.Top} }}",
+                "margin": {"top": "{dp(3)}"}
+            },
+            "3": {
+                "align": "{{ {enum.GridLayout.Align.FillWidth} | {enum.GridLayout.Align.Top} }}",
+                "margin": {"top": "{dp(3)}"}
+            }
+        }
+    }
+}
